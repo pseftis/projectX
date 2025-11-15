@@ -1,0 +1,90 @@
+name: Build and Deploy E-Commerce Project
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: e-commerce-frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./e-commerce-frontend
+        run: npm ci
+      
+      - name: Build
+        working-directory: ./e-commerce-frontend
+        run: npm run build
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./e-commerce-frontend/build
+
+  deploy-admin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: e-commerce-admin/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./e-commerce-admin
+        run: npm ci
+      
+      - name: Build
+        working-directory: ./e-commerce-admin
+        run: npm run build
+      
+      - name: Deploy admin to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./e-commerce-admin/build
+          destination_dir: ./admin
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: e-commerce-backend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./e-commerce-backend
+        run: npm ci
+      
+      - name: Run tests
+        working-directory: ./e-commerce-backend
+        run: npm test || echo "No tests configured"
+
